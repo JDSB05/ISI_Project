@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: intelligence
+  template:
+    metadata:
+      labels:
+        app: intelligence
+    spec:
+      containers:
+      - name: intelligence
+        image: intelligence:latest
+        env:
+          - name: MQTT_BROKER_HOST
+            value: "mqtt-broker"
+          - name: MQTT_BROKER_PORT
+            value: "1883"
+

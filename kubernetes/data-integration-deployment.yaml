@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-integration
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: data-integration
+  template:
+    metadata:
+      labels:
+        app: data-integration
+    spec:
+      containers:
+      - name: data-integration
+        image: data-integration:latest
+        env:
+          - name: MQTT_BROKER_HOST
+            value: "mqtt-broker"
+          - name: MQTT_BROKER_PORT
+            value: "1883"
