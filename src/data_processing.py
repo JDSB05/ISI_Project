@@ -17,5 +17,6 @@ def on_message(client, userdata, message):
 client = mqtt.Client("DataIntegrator")
 client.connect("mosquitto", 1883, 60)
 client.subscribe("sensors/data")
+
 client.on_message = on_message
 client.loop_forever()
