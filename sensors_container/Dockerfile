@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y \
 # Download and install the latest version of pip directly
 RUN wget https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
 
+# Verify if there's a newer version of pip
+RUN pip3 install --upgrade pip
+
 # Upgrade setuptools and wheel (important for building packages)
 RUN pip3 install --upgrade setuptools wheel
 
