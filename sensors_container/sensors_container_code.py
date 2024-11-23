@@ -1,3 +1,4 @@
+import os
 import paho.mqtt.client as mqtt
 import random
 import time
@@ -8,8 +9,8 @@ import threading
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Configurações do broker MQTT
-mqtt_broker = "mqtt"  # Utilize 'mqtt' como endereço do broker no Docker Compose
-mqtt_port = 1883
+mqtt_broker = os.getenv('MQTT_BROKER', 'localhost')  # Use 'localhost' como padrão
+mqtt_port = int(os.getenv('MQTT_PORT', 1883))
 mqtt_client = mqtt.Client()
 
 # Conectar ao broker MQTT
@@ -21,8 +22,8 @@ logging.info("Conectado ao broker MQTT")
 def publish_sensor_data():
     while True:
         # Simular leitura de temperatura e umidade com valores aleatórios
-        temperatura = round(random.uniform(-10.0, 50.0), 2)  # Temperatura entre -10 e 50 graus Celsius
-        umidade = round(random.uniform(10.0, 90.0), 2)       # Umidade entre 10% e 90%
+        temperatura = round(random.uniform(-10.0, 50.0), 2)
+        umidade = round(random.uniform(10.0, 90.0), 2)
         mqtt_client.publish("sensors/temperature_humidity", f"{temperatura},{umidade}")
         logging.info(f"Publicado: Temperatura e Umidade - {temperatura},{umidade}")
 

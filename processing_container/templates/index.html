@@ -7,11 +7,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Dados dos Sensores em Tempo Real</h1>
+    <h1>Dados dos Sensores em Tempo Realll</h1>
     <canvas id="sensorChart" width="800" height="400"></canvas>
     <script>
         var socket = io();
-
+        console.log("Conectado ao servidor de WebSocket");
+        console.log("Aguardando dados dos sensores...");
+        console.log("socket: ",socket);
         var temperatureData = [];
         var humidityData = [];
         var labels = [];
@@ -55,6 +57,7 @@
         });
 
         socket.on('sensor_update', function(data) {
+            console.log("Novos dados recebidos: ",data);
             labels.push(data.timestamp);
             temperatureData.push(data.temperature);
             humidityData.push(data.humidity);
@@ -66,6 +69,18 @@
             }
 
             sensorChart.update();
+        });
+        socket.on('disconnect', function() {
+            console.log("Desconectado do servidor de WebSocket");
+        });
+        socket.on('connect_error', function() {
+            console.log("Erro ao conectar ao servidor de WebSocket");
+        });
+        socket.on('co2_update', function(data) {
+            console.log("Novos dados recebidos: ",data);
+        });
+        socket.on('motion_update', function(data) {
+            console.log("Novos dados recebidos: ",data);
         });
     </script>
 </body>

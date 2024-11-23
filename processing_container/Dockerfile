@@ -8,6 +8,10 @@ RUN apt-get update && apt-get install -y \
 # Configurar o diretório de trabalho
 WORKDIR /app
 
+# Definir variáveis de ambiente
+ENV MQTT_BROKER=mqtt
+ENV MQTT_PORT=1883
+
 # Copiar requirements.txt e instalar dependências Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
