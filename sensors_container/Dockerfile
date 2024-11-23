@@ -1,35 +1,16 @@
-# Use a base image suitable for Raspberry Pi with Python and GPIO support
-FROM balenalib/raspberrypi3-python:3.9-buster
+FROM python:3.9-slim
 
-# Install system dependencies
+# Instalar dependências do sistema (se necessário)
 RUN apt-get update && apt-get install -y \
-    python3-dev \
-    python3-pip \
-    build-essential \
-    cmake \
-    wget \
-    patch \
-    libatlas-base-dev \
-    libopencv-dev \
-    python3-opencv \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install the latest version of pip directly
-RUN wget https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
-
-# Verify if there's a newer version of pip
-RUN pip3 install --upgrade pip
-
-# Upgrade setuptools and wheel (important for building packages)
-RUN pip3 install --upgrade setuptools wheel
-
-# Copy requirements.txt and install Python dependencies
+# Copiar requirements.txt e instalar dependências Python
 COPY requirements.txt .
-RUN pip3 install -r requirements.txt --use-deprecated=legacy-resolver
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the sensor script into the container
+# Copiar o código da aplicação
 COPY sensors_container_code.py /app/
 WORKDIR /app
 
-# Set the entrypoint to run the sensor script
-CMD ["python3", "sensors_container_code.py"]
+# Definir o comando de entrada
+CMD ["python", "sensors_container_code.py"]

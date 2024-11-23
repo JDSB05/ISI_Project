@@ -1,5 +1,1 @@
 paho-mqtt
-gpiozero
-adafruit-circuitpython-dht
-numpy
-opencv-python-headless
