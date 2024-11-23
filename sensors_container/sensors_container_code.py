@@ -1,78 +1,56 @@
 import paho.mqtt.client as mqtt
-import RPi.GPIO as GPIO
-import Adafruit_DHT
-from gpiozero import MotionSensor
-import cv2
-import numpy as np
+import random
 import time
+import logging
+import threading
 
-# MQTT Broker settings
-mqtt_broker = "mqtt"  # Use 'mqtt' as the broker address in Docker Compose
+# Configurações do logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Configurações do broker MQTT
+mqtt_broker = "mqtt"  # Utilize 'mqtt' como endereço do broker no Docker Compose
 mqtt_port = 1883
 mqtt_client = mqtt.Client()
 
-# Connect to MQTT broker
+# Conectar ao broker MQTT
+logging.info("Conectando ao broker MQTT...")
 mqtt_client.connect(mqtt_broker, mqtt_port, 60)
 mqtt_client.loop_start()
-
-# GPIO setup
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-pin_do_sensor_co2 = 18
-pin_do_sensor_temperatura = 4
-pin_do_sensor_movimento = 13
-
-GPIO.setup(pin_do_sensor_co2, GPIO.IN)
-pir = MotionSensor(pin_do_sensor_movimento)
-
-def detectar_co2():
-    valor = GPIO.input(pin_do_sensor_co2)
-    co2_high = valor == GPIO.HIGH
-    return co2_high
-
-def ler_temperatura_umidade():
-    umid, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, pin_do_sensor_temperatura)
-    return temp, umid
-
-def capture_image():
-    cap = cv2.VideoCapture(0)
-    success, img = cap.read()
-    cap.release()
-    if success:
-        _, img_encoded = cv2.imencode('.jpg', img)
-        return img_encoded.tobytes()
-    else:
-        return None
+logging.info("Conectado ao broker MQTT")
 
 def publish_sensor_data():
-    temp, umid = ler_temperatura_umidade()
-    if temp is not None and umid is not None:
-        mqtt_client.publish("sensors/temperature_humidity", f"{temp},{umid}")
-    else:
-        print("Failed to read temperature and humidity")
+    while True:
+        # Simular leitura de temperatura e umidade com valores aleatórios
+        temperatura = round(random.uniform(-10.0, 50.0), 2)  # Temperatura entre -10 e 50 graus Celsius
+        umidade = round(random.uniform(10.0, 90.0), 2)       # Umidade entre 10% e 90%
+        mqtt_client.publish("sensors/temperature_humidity", f"{temperatura},{umidade}")
+        logging.info(f"Publicado: Temperatura e Umidade - {temperatura},{umidade}")
 
-    co2_status = "high" if detectar_co2() else "normal"
-    mqtt_client.publish("sensors/co2", co2_status)
+        # Simular detecção de CO₂
+        co2_status = "high" if random.choice([True, False]) else "normal"
+        mqtt_client.publish("sensors/co2", co2_status)
+        logging.info(f"Publicado: CO₂ - {co2_status}")
 
-def motion_detected():
-    print("Motion detected!")
-    mqtt_client.publish("sensors/motion", "detected")
-    img_bytes = capture_image()
-    if img_bytes:
-        mqtt_client.publish("sensors/camera", img_bytes)
-    else:
-        print("Failed to capture image")
+        time.sleep(10)  # Envia dados a cada 10 segundos
 
-# Assign motion detection handler
-pir.when_motion = motion_detected
+def simulate_motion():
+    while True:
+        time.sleep(random.randint(5, 15))  # Espera entre 5 e 15 segundos
+        mqtt_client.publish("sensors/motion", "detected")
+        logging.info("Publicado: Movimento detectado")
 
 try:
+    # Inicia threads para simular sensores
+    threading.Thread(target=publish_sensor_data, daemon=True).start()
+    threading.Thread(target=simulate_motion, daemon=True).start()
+
+    # Manter o programa em execução
     while True:
-        publish_sensor_data()
-        time.sleep(60)  # Adjust the frequency as needed
+        time.sleep(1)
+
 except KeyboardInterrupt:
-    print("Exiting program")
+    logging.info("Encerrando o programa")
 finally:
     mqtt_client.loop_stop()
     mqtt_client.disconnect()
-    GPIO.cleanup()
+    logging.info("Desconectado do broker MQTT")

@@ -1,4 +1,5 @@
-version: '3'
+version: '3.8'
+
 services:
   mqtt:
     image: eclipse-mosquitto
@@ -14,11 +15,6 @@ services:
     build:
       context: ./sensors_container
     container_name: sensors_container
-    devices:
-      - "/dev/vchiq:/dev/vchiq"
-      - "/dev/video0:/dev/video0"
-      - "/dev/gpiomem:/dev/gpiomem"
-    privileged: true
     depends_on:
       - mqtt
     restart: always

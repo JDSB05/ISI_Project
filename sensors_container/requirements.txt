@@ -1,5 +1,1 @@
 paho-mqtt
-gpiozero
-Adafruit_DHT
-numpy
-opencv-python
