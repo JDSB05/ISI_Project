@@ -1,2 +1,5 @@
 paho-mqtt
 telepot
+flask
+flask-socketio
+eventlet

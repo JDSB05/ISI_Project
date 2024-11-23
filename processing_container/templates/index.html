@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dados dos Sensores em Tempo Real</title>
+    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Dados dos Sensores em Tempo Real</h1>
+    <canvas id="sensorChart" width="800" height="400"></canvas>
+    <script>
+        var socket = io();
+
+        var temperatureData = [];
+        var humidityData = [];
+        var labels = [];
+
+        var ctx = document.getElementById('sensorChart').getContext('2d');
+        var sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Temperatura (°C)',
+                    data: temperatureData,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    fill: false
+                },
+                {
+                    label: 'Umidade (%)',
+                    data: humidityData,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Horário'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Valor'
+                        }
+                    }
+                }
+            }
+        });
+
+        socket.on('sensor_update', function(data) {
+            labels.push(data.timestamp);
+            temperatureData.push(data.temperature);
+            humidityData.push(data.humidity);
+
+            if (labels.length > 20) {
+                labels.shift();
+                temperatureData.shift();
+                humidityData.shift();
+            }
+
+            sensorChart.update();
+        });
+    </script>
+</body>
+</html>

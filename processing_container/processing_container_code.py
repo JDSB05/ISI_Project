@@ -1,14 +1,23 @@
 import paho.mqtt.client as mqtt
 import telepot
 from telepot.loop import MessageLoop
+from flask import Flask, render_template
+from flask_socketio import SocketIO, emit
 import threading
 import time
 import random
+import csv
+from datetime import datetime
 
 # Configurações do broker MQTT
-mqtt_broker = "mqtt"  # Utilize 'mqtt' como endereço do broker no Docker Compose
+mqtt_broker = "mqtt"
 mqtt_port = 1883
 mqtt_client = mqtt.Client()
+
+# Inicialização do Flask
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 
 # Variáveis globais para armazenar os dados dos sensores
 sensor_data = {
@@ -17,6 +26,14 @@ sensor_data = {
     "co2": "normal",
     "motion": False
 }
+
+# Nome do arquivo CSV
+csv_file = 'sensor_data.csv'
+
+# Escrever o cabeçalho no arquivo CSV
+with open(csv_file, 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(['timestamp', 'temperature', 'humidity', 'co2', 'motion'])
 
 # Token do bot Telegram
 bot_token = '7693586888:AAERrtk5fZZ2FkdRwFQK6-ovbNiNeZUrUic'  # Substitua pelo seu token do bot
@@ -32,24 +49,43 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     topic = msg.topic
     payload = msg.payload.decode()
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print(f"Mensagem recebida no tópico {topic}: {payload}")
 
     if topic == "sensors/temperature_humidity":
         temp_str, hum_str = payload.split(",")
         sensor_data["temperature"] = float(temp_str)
         sensor_data["humidity"] = float(hum_str)
-        print(f"Temperatura recebida: {temp_str}°C, Umidade: {hum_str}%")
+        save_data_to_csv(timestamp)
         check_environmental_conditions()
+        # Enviar dados para o cliente via SocketIO
+        print("Emitindo dados para o cliente via SocketIO")
+        socketio.emit('sensor_update', {'timestamp': timestamp, 'temperature': sensor_data["temperature"], 'humidity': sensor_data["humidity"]})
 
     elif topic == "sensors/co2":
         sensor_data["co2"] = payload
-        print(f"Status de CO₂ recebido: {sensor_data['co2']}")
+        save_data_to_csv(timestamp)
         check_co2_level()
+        socketio.emit('co2_update', {'timestamp': timestamp, 'co2': sensor_data["co2"]})
 
     elif topic == "sensors/motion":
         sensor_data["motion"] = True
-        print("Movimento detectado")
+        save_data_to_csv(timestamp)
         simulate_object_detection()
+        socketio.emit('motion_update', {'timestamp': timestamp, 'motion': True})
+
+def save_data_to_csv(timestamp):
+    with open(csv_file, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            timestamp,
+            sensor_data.get("temperature"),
+            sensor_data.get("humidity"),
+            sensor_data.get("co2"),
+            sensor_data.get("motion")
+        ])
+    # Resetar o valor de motion depois de salvar
+    sensor_data["motion"] = False
 
 def check_environmental_conditions():
     messages = []
@@ -91,11 +127,11 @@ def notify_users(detected_object):
     message = ''
     if detected_object:
         if detected_object == "person":
-            message += 'Pessoa Detectada! \n'
+            message += 'Pessoa Detectada!\n'
         elif detected_object == "cat":
-            message += 'Gato Detectado! \n'
+            message += 'Gato Detectado!\n'
         elif detected_object == "dog":
-            message += 'Cão Detectado! \n'
+            message += 'Cão Detectado!\n'
     else:
         message += 'Movimento Detectado.\n'
 
@@ -128,29 +164,36 @@ def handle_telegram_messages(msg):
 
 def start_telegram_bot():
     try:
+        print("Iniciando bot Telegram...")
         MessageLoop(bot, handle_telegram_messages).run_as_thread()
         print("Bot Telegram iniciado e aguardando mensagens...")
     except Exception as e:
         print(f"Erro ao iniciar o bot Telegram: {e}")
 
-# Iniciar o bot Telegram em uma thread separada
-threading.Thread(target=start_telegram_bot, daemon=True).start()
+# Rota principal do Flask
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-# Configurar callbacks MQTT
-mqtt_client.on_connect = on_connect
-mqtt_client.on_message = on_message
+def start_flask_app():
+    socketio.run(app, host='0.0.0.0', port=5000)
 
-# Conectar ao broker MQTT
-mqtt_client.connect(mqtt_broker, mqtt_port, 60)
-mqtt_client.loop_start()
-print("Cliente MQTT iniciado e aguardando mensagens...")
+def start_mqtt_client():
+    # Configurar callbacks MQTT
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
 
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    print("Encerrando o programa")
-finally:
-    mqtt_client.loop_stop()
-    mqtt_client.disconnect()
-    print("Cliente MQTT desconectado")
+    # Conectar ao broker MQTT
+    mqtt_client.connect(mqtt_broker, mqtt_port, 60)
+    mqtt_client.loop_start()
+    print("Cliente MQTT iniciado e aguardando mensagens...")
+
+if __name__ == '__main__':
+    # Iniciar o bot Telegram em uma thread separada
+    threading.Thread(target=start_telegram_bot, daemon=True).start()
+
+    # Iniciar o cliente MQTT em uma thread separada
+    threading.Thread(target=start_mqtt_client, daemon=True).start()
+
+    # Iniciar o Flask app
+    start_flask_app()
