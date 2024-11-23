@@ -14,5 +14,9 @@ COPY sensors_container_code.py /app/
 COPY wait-for-it.sh /app/
 WORKDIR /app
 
+# Dar permissão de execução ao script
+ENV MQTT_BROKER=mqtt
+ENV MQTT_PORT=1883
+
 # Definir o comando de entrada
 CMD ["./wait-for-it.sh", "mqtt", "--", "python", "sensors_container_code.py"]
