@@ -3,3 +3,4 @@ telepot
 flask
 flask-socketio
 eventlet
+requests

@@ -1,4 +1,6 @@
 import os
+import eventlet
+eventlet.monkey_patch()
 import paho.mqtt.client as mqtt
 import telepot
 from telepot.loop import MessageLoop
@@ -18,7 +20,7 @@ mqtt_client = mqtt.Client()
 # Inicialização do Flask
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, logger=True, engineio_logger=True)
+socketio = SocketIO(app, async_mode='eventlet')
 
 # Variáveis globais para armazenar os dados dos sensores
 sensor_data = {
@@ -29,7 +31,7 @@ sensor_data = {
 }
 
 # Nome do arquivo CSV
-csv_file = 'sensor_data.csv'
+csv_file = './sensor_data.csv'
 
 # Escrever o cabeçalho no arquivo CSV
 with open(csv_file, 'w', newline='') as file:
