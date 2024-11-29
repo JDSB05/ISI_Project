@@ -7,7 +7,7 @@ services:
     ports:
       - "1883:1883"
     volumes:
-      - ./mqtt/config:/mosquitto/config
+      - ./mqtt/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./mqtt/data:/mosquitto/data
       - ./mqtt/log:/mosquitto/log
 
@@ -17,6 +17,17 @@ services:
     container_name: sensors_container
     depends_on:
       - mqtt
+    environment:
+      - MQTT_BROKER=mqtt
+      - MQTT_PORT=1883
+    restart: always
+
+  telegram_bot:
+    build:
+      context: ./telegram_bot_container
+    container_name: telegram_bot_container
+    environment:
+      - TELEGRAM_BOT_TOKEN=7693586888:AAERrtk5fZZ2FkdRwFQK6-ovbNiNeZUrUic  # Substitua pelo seu token do bot
     restart: always
 
   processing:
@@ -25,6 +36,10 @@ services:
     container_name: processing_container
     depends_on:
       - mqtt
+      - telegram_bot
     ports:
-      - "5000:5000"
+      - "5000:5000"  # Expondo a porta 5000 para o servidor web
+    environment:
+      - MQTT_BROKER=mqtt
+      - MQTT_PORT=1883
     restart: always
