@@ -13,8 +13,9 @@ mqtt_broker = os.getenv('MQTT_BROKER', 'localhost')  # Use 'localhost' como padr
 mqtt_port = int(os.getenv('MQTT_PORT', 1883))
 mqtt_client = mqtt.Client()
 
-# ID do carro (pode ser definido como variável de ambiente)
+# ID do carro e do sensor (podem ser definidos como variáveis de ambiente)
 car_id = os.getenv('CAR_ID', 'carro1')
+sensor_id = os.getenv('SENSOR_ID', 'sensor1')
 
 # Conectar ao broker MQTT
 logging.info("Conectando ao broker MQTT...")
@@ -27,13 +28,13 @@ def publish_sensor_data():
         # Simular leitura de temperatura e umidade com valores aleatórios
         temperatura = round(random.uniform(-10.0, 50.0), 2)
         umidade = round(random.uniform(10.0, 90.0), 2)
-        topic = f"sensors/{car_id}/temperature_humidity"
+        topic = f"sensors/{car_id}/{sensor_id}/temperature_humidity"
         mqtt_client.publish(topic, f"{temperatura},{umidade}")
         logging.info(f"\n--- Dados de Temperatura e Umidade ---\nTópico: {topic}\nTemperatura: {temperatura}°C\nUmidade: {umidade}%\n")
 
         # Simular detecção de CO₂
         co2_status = "high" if random.choice([True, False]) else "normal"
-        topic = f"sensors/{car_id}/co2"
+        topic = f"sensors/{car_id}/{sensor_id}/co2"
         mqtt_client.publish(topic, co2_status)
         logging.info(f"\n--- Dados de CO₂ ---\nTópico: {topic}\nStatus de CO₂: {co2_status}\n")
 
@@ -42,7 +43,7 @@ def publish_sensor_data():
 def simulate_motion():
     while True:
         time.sleep(random.randint(5, 15))  # Espera entre 5 e 15 segundos
-        topic = f"sensors/{car_id}/motion"
+        topic = f"sensors/{car_id}/{sensor_id}/motion"
         mqtt_client.publish(topic, "detected")
         logging.info(f"Publicado no tópico {topic}: Movimento detectado")
 
