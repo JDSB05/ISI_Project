@@ -14,12 +14,14 @@ services:
   sensors:
     build:
       context: ./sensors_container
-    container_name: sensors_container
     depends_on:
       - mqtt
     environment:
       - MQTT_BROKER=mqtt
       - MQTT_PORT=1883
+      - CAR_ID=carro${SENSOR_ID}
+    deploy:
+      replicas: 1
     restart: always
 
   telegram_bot:
@@ -27,7 +29,7 @@ services:
       context: ./telegram_bot_container
     container_name: telegram_bot_container
     environment:
-      - TELEGRAM_BOT_TOKEN=7693586888:AAERrtk5fZZ2FkdRwFQK6-ovbNiNeZUrUic  # Substitua pelo seu token do bot
+      - TELEGRAM_BOT_TOKEN=7693586888:AAERrtk5fZZ2FkdRwFQK6-ovbNiNeZUrUic
     restart: always
 
   processing:
@@ -38,7 +40,7 @@ services:
       - mqtt
       - telegram_bot
     ports:
-      - "5000:5000"  # Expondo a porta 5000 para o servidor web
+      - "5000:5000"
     environment:
       - MQTT_BROKER=mqtt
       - MQTT_PORT=1883

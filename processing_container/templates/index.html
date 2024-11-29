@@ -9,11 +9,27 @@
 <body>
     <h1>Dados dos Sensores em Tempo Real</h1>
     <canvas id="sensorChart" width="800" height="400"></canvas>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Carro</th>
+                <th>Temperatura (°C)</th>
+                <th>Umidade (%)</th>
+                <th>CO₂</th>
+                <th>Movimento</th>
+            </tr>
+        </thead>
+        <tbody id="sensor-data-table" style="max-height: 400px; overflow-y: auto;">
+
+        </tbody>
+    </table>
+
     <script>
         var socket = io();
         console.log("Conectado ao servidor de WebSocket");
         console.log("Aguardando dados dos sensores...");
-        console.log("socket: ",socket);
+
         var temperatureData = [];
         var humidityData = [];
         var labels = [];
@@ -56,9 +72,51 @@
             }
         });
 
-        socket.on('sensor_update', function(data) {
-            console.log("Novos dados recebidos: ",data);
-            labels.push(data.timestamp);
+        socket.on('sensor_data', function(data) {
+            console.log("Novos dados recebidos: ", data);
+
+            const tableBody = document.getElementById('sensor-data-table');
+
+            // Criar uma nova linha na tabela
+            const row = document.createElement('tr');
+
+            // Adicionar células na linha
+            const timestampCell = document.createElement('td');
+            timestampCell.textContent = data.timestamp;
+            row.appendChild(timestampCell);
+
+            const carIdCell = document.createElement('td');
+            carIdCell.textContent = data.car_id;
+            row.appendChild(carIdCell);
+
+            const temperatureCell = document.createElement('td');
+            temperatureCell.textContent = data.temperature !== null ? data.temperature : 'N/A';
+            row.appendChild(temperatureCell);
+
+            const humidityCell = document.createElement('td');
+            humidityCell.textContent = data.humidity !== null ? data.humidity : 'N/A';
+            row.appendChild(humidityCell);
+
+            const co2Cell = document.createElement('td');
+            co2Cell.textContent = data.co2 !== null ? data.co2 : 'N/A';
+            row.appendChild(co2Cell);
+
+            const motionCell = document.createElement('td');
+            motionCell.textContent = data.motion ? 'Sim' : 'Não';
+            row.appendChild(motionCell);
+
+            // Adicionar a nova linha no início da tabela
+            tableBody.insertBefore(row, tableBody.firstChild);
+
+            // Limitar o número de linhas na tabela
+            if (tableBody.rows.length > 50) {
+                tableBody.deleteRow(-1);
+            }
+
+            // Atualizar o gráfico
+            const timestamp = data.timestamp;
+            labels.push(timestamp);
+
             temperatureData.push(data.temperature);
             humidityData.push(data.humidity);
 
@@ -70,9 +128,11 @@
 
             sensorChart.update();
         });
+
         socket.on('disconnect', function() {
             console.log("Desconectado do servidor de WebSocket");
         });
+
         socket.on('connect_error', function() {
             console.log("Erro ao conectar ao servidor de WebSocket");
         });

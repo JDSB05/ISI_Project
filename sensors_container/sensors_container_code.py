@@ -29,13 +29,13 @@ def publish_sensor_data():
         umidade = round(random.uniform(10.0, 90.0), 2)
         topic = f"sensors/{car_id}/temperature_humidity"
         mqtt_client.publish(topic, f"{temperatura},{umidade}")
-        logging.info(f"Publicado no tópico {topic}: {temperatura},{umidade}")
+        logging.info(f"\n--- Dados de Temperatura e Umidade ---\nTópico: {topic}\nTemperatura: {temperatura}°C\nUmidade: {umidade}%\n")
 
         # Simular detecção de CO₂
         co2_status = "high" if random.choice([True, False]) else "normal"
         topic = f"sensors/{car_id}/co2"
         mqtt_client.publish(topic, co2_status)
-        logging.info(f"Publicado no tópico {topic}: {co2_status}")
+        logging.info(f"\n--- Dados de CO₂ ---\nTópico: {topic}\nStatus de CO₂: {co2_status}\n")
 
         time.sleep(10)  # Envia dados a cada 10 segundos
 
