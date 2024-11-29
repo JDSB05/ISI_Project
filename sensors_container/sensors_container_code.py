@@ -13,6 +13,9 @@ mqtt_broker = os.getenv('MQTT_BROKER', 'localhost')  # Use 'localhost' como padr
 mqtt_port = int(os.getenv('MQTT_PORT', 1883))
 mqtt_client = mqtt.Client()
 
+# ID do carro (pode ser definido como variável de ambiente)
+car_id = os.getenv('CAR_ID', 'carro1')
+
 # Conectar ao broker MQTT
 logging.info("Conectando ao broker MQTT...")
 mqtt_client.connect(mqtt_broker, mqtt_port, 60)
@@ -24,21 +27,24 @@ def publish_sensor_data():
         # Simular leitura de temperatura e umidade com valores aleatórios
         temperatura = round(random.uniform(-10.0, 50.0), 2)
         umidade = round(random.uniform(10.0, 90.0), 2)
-        mqtt_client.publish("sensors/temperature_humidity", f"{temperatura},{umidade}")
-        logging.info(f"Publicado: Temperatura e Umidade - {temperatura},{umidade}")
+        topic = f"sensors/{car_id}/temperature_humidity"
+        mqtt_client.publish(topic, f"{temperatura},{umidade}")
+        logging.info(f"Publicado no tópico {topic}: {temperatura},{umidade}")
 
         # Simular detecção de CO₂
         co2_status = "high" if random.choice([True, False]) else "normal"
-        mqtt_client.publish("sensors/co2", co2_status)
-        logging.info(f"Publicado: CO₂ - {co2_status}")
+        topic = f"sensors/{car_id}/co2"
+        mqtt_client.publish(topic, co2_status)
+        logging.info(f"Publicado no tópico {topic}: {co2_status}")
 
         time.sleep(10)  # Envia dados a cada 10 segundos
 
 def simulate_motion():
     while True:
         time.sleep(random.randint(5, 15))  # Espera entre 5 e 15 segundos
-        mqtt_client.publish("sensors/motion", "detected")
-        logging.info("Publicado: Movimento detectado")
+        topic = f"sensors/{car_id}/motion"
+        mqtt_client.publish(topic, "detected")
+        logging.info(f"Publicado no tópico {topic}: Movimento detectado")
 
 try:
     # Inicia threads para simular sensores
