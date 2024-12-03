@@ -10,8 +10,13 @@ services:
       - ./mqtt/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./mqtt/data:/mosquitto/data
       - ./mqtt/log:/mosquitto/log
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: '256M'
 
-  sensors:
+  sensor1:
     build:
       context: ./sensors_container
     depends_on:
@@ -19,10 +24,48 @@ services:
     environment:
       - MQTT_BROKER=mqtt
       - MQTT_PORT=1883
-      - CAR_ID=carro${SENSOR_ID}
-    deploy:
-      replicas: 1
+      - SENSOR_ID=sensor1
+      - CAR_ID=carro1
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: '128M'
+
+  sensor2:
+    build:
+      context: ./sensors_container
+    depends_on:
+      - mqtt
+    environment:
+      - MQTT_BROKER=mqtt
+      - MQTT_PORT=1883
+      - SENSOR_ID=sensor2
+      - CAR_ID=carro2
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: '128M'
+
+  sensor3:
+    build:
+      context: ./sensors_container
+    depends_on:
+      - mqtt
+    environment:
+      - MQTT_BROKER=mqtt
+      - MQTT_PORT=1883
+      - SENSOR_ID=sensor3
+      - CAR_ID=carro3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: '128M'
 
   telegram_bot:
     build:
@@ -31,6 +74,11 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN=7693586888:AAERrtk5fZZ2FkdRwFQK6-ovbNiNeZUrUic
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: '128M'
 
   processing:
     build:
@@ -45,3 +93,8 @@ services:
       - MQTT_BROKER=mqtt
       - MQTT_PORT=1883
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: '256M'

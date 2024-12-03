@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en"></html>
 <head>
     <meta charset="UTF-8">
-    <title>Dados dos Sensores em Tempo Real</title>
+    <title>Real-Time Sensor Data</title>
     <script src="https://cdn.socket.io/3.1.3/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -55,17 +55,17 @@
 </head>
 <body>
     <div class="container">
-        <h1>Dados dos Sensores em Tempo Real</h1>
+        <h1>Real-Time Sensor Data</h1>
         <canvas id="sensorChart" width="800" height="400"></canvas>
         <table>
             <thead>
                 <tr>
                     <th>Timestamp</th>
-                    <th>Carro</th>
-                    <th>Temperatura (°C)</th>
-                    <th>Umidade (%)</th>
+                    <th>Car</th>
+                    <th>Temperature (°C)</th>
+                    <th>Humidity (%)</th>
                     <th>CO₂</th>
-                    <th>Movimento</th>
+                    <th>Motion</th>
                 </tr>
             </thead>
             <tbody id="sensor-data-table">
@@ -75,8 +75,8 @@
 
     <script>
         var socket = io();
-        console.log("Conectado ao servidor de WebSocket");
-        console.log("Aguardando dados dos sensores...");
+        console.log("Connected to WebSocket server");
+        console.log("Waiting for sensor data...");
 
         var temperatureData = [];
         var humidityData = [];
@@ -88,13 +88,13 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Temperatura (°C)',
+                    label: 'Temperature (°C)',
                     data: temperatureData,
                     borderColor: 'rgba(255, 99, 132, 1)',
                     fill: false
                 },
                 {
-                    label: 'Umidade (%)',
+                    label: 'Humidity (%)',
                     data: humidityData,
                     borderColor: 'rgba(54, 162, 235, 1)',
                     fill: false
@@ -106,14 +106,14 @@
                         display: true,
                         title: {
                             display: true,
-                            text: 'Horário'
+                            text: 'Time'
                         }
                     },
                     y: {
                         display: true,
                         title: {
                             display: true,
-                            text: 'Valor'
+                            text: 'Value'
                         }
                     }
                 }
@@ -121,14 +121,14 @@
         });
 
         socket.on('sensor_data', function(data) {
-            console.log("Novos dados recebidos: ", data);
+            console.log("New data received: ", data);
 
             const tableBody = document.getElementById('sensor-data-table');
 
-            // Criar uma nova linha na tabela
+            // Create a new row in the table
             const row = document.createElement('tr');
 
-            // Adicionar células na linha
+            // Add cells to the row
             const timestampCell = document.createElement('td');
             timestampCell.textContent = data.timestamp;
             row.appendChild(timestampCell);
@@ -150,18 +150,18 @@
             row.appendChild(co2Cell);
 
             const motionCell = document.createElement('td');
-            motionCell.textContent = data.motion ? 'Sim' : 'Não';
+            motionCell.textContent = data.motion ? 'Yes' : 'No';
             row.appendChild(motionCell);
 
-            // Adicionar a nova linha no início da tabela
+            // Add the new row at the beginning of the table
             tableBody.insertBefore(row, tableBody.firstChild);
 
-            // Limitar o número de linhas na tabela
+            // Limit the number of rows in the table
             if (tableBody.rows.length > 50) {
                 tableBody.deleteRow(-1);
             }
 
-            // Atualizar o gráfico
+            // Update the chart
             const timestamp = data.timestamp;
             labels.push(timestamp);
 
@@ -178,11 +178,11 @@
         });
 
         socket.on('disconnect', function() {
-            console.log("Desconectado do servidor de WebSocket");
+            console.log("Disconnected from WebSocket server");
         });
 
         socket.on('connect_error', function() {
-            console.log("Erro ao conectar ao servidor de WebSocket");
+            console.log("Error connecting to WebSocket server");
         });
     </script>
 </body>
