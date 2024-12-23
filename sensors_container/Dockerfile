@@ -1,28 +1,28 @@
 FROM python:3.9-slim
 
-# Instalar dependências do sistema
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-# Configurar o diretório de trabalho
+# Set the working directory
 WORKDIR /app
 
-# Copiar requirements.txt e instalar dependências Python
+# Copy requirements.txt and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar o código da aplicação e o script de espera
+# Copy application code and the wait script
 COPY sensors_container_code.py .
 COPY wait-for-it.sh .
 
-# Dar permissão de execução ao script
+# Give execution permission to the script
 RUN chmod +x wait-for-it.sh
 
-# Definir variáveis de ambiente padrão
+# Set default environment variables
 ENV MQTT_BROKER=mqtt
 ENV MQTT_PORT=1883
 ENV CAR_ID=carro1
 
-# Definir o comando de entrada com host e porta separados
+# Set the entry command with host and port separated
 CMD ["./wait-for-it.sh", "mqtt", "--", "python", "sensors_container_code.py"]

@@ -6,7 +6,7 @@ shift
 cmd="$@"
 
 until nc -z "$host" 1883; do
-  echo "Aguardando o serviço $host:1883..."
+  echo "Waiting for the service $host:1883..."
   sleep 1
 done
 

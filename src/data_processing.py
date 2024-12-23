@@ -4,7 +4,7 @@ import json
 def on_message(client, userdata, message):
     data = json.loads(message.payload.decode())
     print("Data received for integration:", data)
-    # Processamento de dados (simulação)
+    # Data processing (simulation)
     processed_data = {
         "temperature": data["temperature"],
         "humidity": data["humidity"],
