@@ -9,11 +9,14 @@ import threading
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # MQTT broker configuration
+
 mqtt_broker = os.getenv('MQTT_BROKER', 'localhost')  # Use 'localhost' as default
 mqtt_port = int(os.getenv('MQTT_PORT', 1883))
 mqtt_client = mqtt.Client()
 
+
 # Car and sensor IDs (can be set as environment variables)
+
 car_id = os.getenv('CAR_ID', 'car1')
 sensor_id = os.getenv('SENSOR_ID', 'sensor1')
 

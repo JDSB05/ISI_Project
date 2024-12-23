@@ -103,7 +103,8 @@ def on_message(client, userdata, msg):
         save_data_to_csv(timestamp, car_id, sensor_id)
 
         # Send all data to the client via SocketIO
-        print(f"[INFO] Emitting data of car {car_id} and sensor {sensor_id} to the client via SocketIO")
+        print(f"[INFO] Emitting data for car {car_id} and sensor {sensor_id} to the client via SocketIO")
+
         data_copy = sensor_data[(car_id, sensor_id)].copy()
         data_copy["car_id"] = car_id
         data_copy["sensor_id"] = sensor_id
@@ -165,6 +166,7 @@ def notify_users(car_id, sensor_id, detected_object):
         message += f'Temperature: {temp:.2f}°C, Humidity: {hum:.2f}%\n'
 
     send_telegram_message(car_id, sensor_id, message)
+
 
 # Main route of Flask
 @app.route('/')
