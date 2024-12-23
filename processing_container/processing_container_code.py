@@ -56,7 +56,7 @@ def send_telegram_message(car_id, sensor_id, message):
     except Exception as e:
         print(f"[ERROR] Error sending message to Telegram bot: {e}")
 
-# Telegram bot service URL
+# URL of the Telegram bot service
 telegram_bot_url = 'http://telegram_bot_container:5001/send_message'
 
 def on_connect(client, userdata, flags, rc):
@@ -104,6 +104,7 @@ def on_message(client, userdata, msg):
 
         # Send all data to the client via SocketIO
         print(f"[INFO] Emitting data for car {car_id} and sensor {sensor_id} to the client via SocketIO")
+
         data_copy = sensor_data[(car_id, sensor_id)].copy()
         data_copy["car_id"] = car_id
         data_copy["sensor_id"] = sensor_id
@@ -166,7 +167,8 @@ def notify_users(car_id, sensor_id, detected_object):
 
     send_telegram_message(car_id, sensor_id, message)
 
-# Main Flask route
+
+# Main route of Flask
 @app.route('/')
 def index():
     return render_template('index.html')
