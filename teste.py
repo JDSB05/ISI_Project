@@ -1,20 +1,20 @@
 import socketio
 
-# Criar uma instância do cliente SocketIO
+# Create an instance of the SocketIO client
 sio = socketio.Client()
 
 @sio.event
 def connect():
-    print("Conectado ao servidor WebSocket")
+    print("Connected to the WebSocket server")
 
 @sio.event
 def disconnect():
-    print("Desconectado do servidor WebSocket")
+    print("Disconnected from the WebSocket server")
 
 @sio.on('sensor_update')
 def on_sensor_update(data):
     print("Sensor update received:", data)
 
-# Conectar ao servidor WebSocket
-sio.connect('http://localhost:5000/')  # Substitua pela URL do seu WebSocket
+# Connect to the WebSocket server
+sio.connect('http://localhost:5000/')  # Replace with your WebSocket URL
 sio.wait()

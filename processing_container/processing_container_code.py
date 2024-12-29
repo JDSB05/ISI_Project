@@ -17,7 +17,7 @@ mqtt_port = int(os.getenv('MQTT_PORT', 1883))
 mqtt_client = mqtt.Client()
 
 # Flask initialization
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, async_mode='eventlet')
 

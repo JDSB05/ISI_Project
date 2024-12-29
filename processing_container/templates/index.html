@@ -1,63 +1,22 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Real-Time Sensor Data</title>
+    <link rel="stylesheet" href="static/css/styles.css">
     <script src="https://cdn.socket.io/3.1.3/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        h1 {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .container {
-            width: 90%;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        canvas {
-            display: block;
-            margin: 0 auto 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #ddd;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        tbody {
-            display: block;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        thead, tbody tr {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 </head>
 <body>
     <div class="container">
         <h1>Real-Time Sensor Data</h1>
-        <canvas id="sensorChart" width="800" height="400"></canvas>
+        <label for="carSelector">Select Car:</label>
+        <select id="carSelector">
+            <option value="all">All Cars</option>
+        </select>
+        <canvas id="temperatureChart" width="800" height="400"></canvas>
+        <canvas id="humidityChart" width="800" height="400"></canvas>
         <table>
             <thead>
                 <tr>
@@ -79,12 +38,64 @@
         console.log("Connected to WebSocket server");
         console.log("Waiting for sensor data...");
 
-        var temperatureData = [];
-        var humidityData = [];
-        var labels = [];
+        var selectedCar = "all";
+        const carSelector = document.getElementById('carSelector');
+        const allData = [];
+        const labels = [];
+        const temperatureData = [];
+        const humidityData = [];
 
-        var ctx = document.getElementById('sensorChart').getContext('2d');
-        var sensorChart = new Chart(ctx, {
+        function addCarToSelector(carId) {
+            if (!Array.from(carSelector.options).some(option => option.value === carId)) {
+                const option = document.createElement('option');
+                option.value = carId;
+                option.textContent = carId;
+                carSelector.appendChild(option);
+            }
+        }
+
+        function updateChartsAndTable() {
+            const filteredData = selectedCar === "all" 
+                ? allData 
+                : allData.filter(data => data.car_id === selectedCar);
+
+            
+            const tableBody = document.getElementById('sensor-data-table');
+            tableBody.innerHTML = "";
+            filteredData.forEach(data => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.timestamp}</td>
+                    <td>${data.car_id}</td>
+                    <td>${data.temperature !== null ? data.temperature : 'N/A'}</td>
+                    <td>${data.humidity !== null ? data.humidity : 'N/A'}</td>
+                    <td>${data.co2 !== null ? data.co2 : 'N/A'}</td>
+                    <td>${data.motion ? 'Yes' : 'No'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            labels.length = 0;
+            temperatureData.length = 0;
+            humidityData.length = 0;
+
+            filteredData.forEach(data => {
+                labels.push(data.timestamp);
+                temperatureData.push(data.temperature);
+                humidityData.push(data.humidity);
+            });
+
+            temperatureChart.update();
+            humidityChart.update();
+        }
+
+        carSelector.addEventListener('change', (event) => {
+            selectedCar = event.target.value;
+            updateChartsAndTable();
+        });
+
+        const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+        const temperatureChart = new Chart(tempCtx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -93,8 +104,60 @@
                     data: temperatureData,
                     borderColor: 'rgba(255, 99, 132, 1)',
                     fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        display: true,
+                        title: { display: true, text: 'Time' }
+                    },
+                    y: {
+                        display: true,
+                        title: { display: true, text: 'Temperature (°C)' }
+                    }
                 },
-                {
+                plugins: {
+                    annotation: {
+                        annotations: {
+                            maxTempLine: {
+                                type: 'line',
+                                yMin: 30,
+                                yMax: 30,
+                                borderColor: 'black',
+                                borderWidth: 2,
+                                borderDash: [6, 4],
+                                label: {
+                                    content: 'Max Temp (30°C)',
+                                    enabled: true,
+                                    position: 'end'
+                                }
+                            },
+                            minTempLine: {
+                                type: 'line',
+                                yMin: 5,
+                                yMax: 5,
+                                borderColor: 'black',
+                                borderWidth: 2,
+                                borderDash: [6, 4],
+                                label: {
+                                    content: 'Min Temp (5°C)',
+                                    enabled: true,
+                                    position: 'end'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const humCtx = document.getElementById('humidityChart').getContext('2d');
+        const humidityChart = new Chart(humCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
                     label: 'Humidity (%)',
                     data: humidityData,
                     borderColor: 'rgba(54, 162, 235, 1)',
@@ -105,16 +168,42 @@
                 scales: {
                     x: {
                         display: true,
-                        title: {
-                            display: true,
-                            text: 'Time'
-                        }
+                        title: { display: true, text: 'Time' }
                     },
                     y: {
                         display: true,
-                        title: {
-                            display: true,
-                            text: 'Value'
+                        title: { display: true, text: 'Humidity (%)' }
+                    }
+                },
+                plugins: {
+                    annotation: {
+                        annotations: {
+                            maxHumLine: {
+                                type: 'line',
+                                yMin: 70,
+                                yMax: 70,
+                                borderColor: 'black',
+                                borderWidth: 2,
+                                borderDash: [6, 4],
+                                label: {
+                                    content: 'Max Hum (70%)',
+                                    enabled: true,
+                                    position: 'end'
+                                }
+                            },
+                            minHumLine: {
+                                type: 'line',
+                                yMin: 30,
+                                yMax: 30,
+                                borderColor: 'black',
+                                borderWidth: 2,
+                                borderDash: [6, 4],
+                                label: {
+                                    content: 'Min Hum (30%)',
+                                    enabled: true,
+                                    position: 'end'
+                                }
+                            }
                         }
                     }
                 }
@@ -124,58 +213,9 @@
         socket.on('sensor_data', function(data) {
             console.log("New data received: ", data);
 
-            const tableBody = document.getElementById('sensor-data-table');
-
-            // Create a new row in the table
-            const row = document.createElement('tr');
-
-            // Add cells to the row
-            const timestampCell = document.createElement('td');
-            timestampCell.textContent = data.timestamp;
-            row.appendChild(timestampCell);
-
-            const carIdCell = document.createElement('td');
-            carIdCell.textContent = data.car_id;
-            row.appendChild(carIdCell);
-
-            const temperatureCell = document.createElement('td');
-            temperatureCell.textContent = data.temperature !== null ? data.temperature : 'N/A';
-            row.appendChild(temperatureCell);
-
-            const humidityCell = document.createElement('td');
-            humidityCell.textContent = data.humidity !== null ? data.humidity : 'N/A';
-            row.appendChild(humidityCell);
-
-            const co2Cell = document.createElement('td');
-            co2Cell.textContent = data.co2 !== null ? data.co2 : 'N/A';
-            row.appendChild(co2Cell);
-
-            const motionCell = document.createElement('td');
-            motionCell.textContent = data.motion ? 'Yes' : 'No';
-            row.appendChild(motionCell);
-
-            // Add the new row at the beginning of the table
-            tableBody.insertBefore(row, tableBody.firstChild);
-
-            // Limit the number of rows in the table
-            if (tableBody.rows.length > 50) {
-                tableBody.deleteRow(-1);
-            }
-
-            // Update the chart
-            const timestamp = data.timestamp;
-            labels.push(timestamp);
-
-            temperatureData.push(data.temperature);
-            humidityData.push(data.humidity);
-
-            if (labels.length > 20) {
-                labels.shift();
-                temperatureData.shift();
-                humidityData.shift();
-            }
-
-            sensorChart.update();
+            addCarToSelector(data.car_id);
+            allData.push(data);
+            updateChartsAndTable();
         });
 
         socket.on('disconnect', function() {
